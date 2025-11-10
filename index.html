@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>简洁音频播放器</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .player-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            max-width: 400px;
+            padding: 30px;
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+        
+        .player-container:hover {
+            transform: translateY(-5px);
+        }
+        
+        .album-art {
+            width: 180px;
+            height: 180px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            margin: 0 auto 25px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+        }
+        
+        .album-art i {
+            font-size: 60px;
+            color: white;
+            opacity: 0.8;
+        }
+        
+        .song-info {
+            margin-bottom: 25px;
+        }
+        
+        .song-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+        
+        .song-artist {
+            font-size: 16px;
+            color: #666;
+        }
+        
+        .audio-player {
+            width: 100%;
+            margin-bottom: 20px;
+        }
+        
+        .progress-container {
+            width: 100%;
+            height: 6px;
+            background: #e0e0e0;
+            border-radius: 3px;
+            margin-bottom: 25px;
+            cursor: pointer;
+            position: relative;
+        }
+        
+        .progress {
+            height: 100%;
+            background: linear-gradient(to right, #667eea, #764ba2);
+            border-radius: 3px;
+            width: 0%;
+            transition: width 0.1s ease;
+        }
+        
+        .time-display {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 20px;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 25px;
+        }
+        
+        .control-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 18px;
+            color: #667eea;
+            transition: all 0.2s ease;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .control-btn:hover {
+            background: rgba(102, 126, 234, 0.1);
+            transform: scale(1.1);
+        }
+        
+        .play-btn {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            font-size: 24px;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .play-btn:hover {
+            background: linear-gradient(135deg, #5a6fd8, #6a4190);
+            transform: scale(1.05);
+        }
+        
+        .volume-container {
+            display: flex;
+            align-items: center;
+            margin-top: 20px;
+            gap: 10px;
+        }
+        
+        .volume-slider {
+            flex-grow: 1;
+            height: 5px;
+            background: #e0e0e0;
+            border-radius: 3px;
+            outline: none;
+            -webkit-appearance: none;
+        }
+        
+        .volume-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+        }
+        
+        .status {
+            margin-top: 15px;
+            font-size: 14px;
+            color: #4CAF50;
+            min-height: 20px;
+        }
+        
+        footer {
+            margin-top: 25px;
+            font-size: 12px;
+            color: #999;
+        }
+    </style>
+</head>
+<body>
+    <div class="player-container">
+        <div class="album-art">
+            <i>♪</i>
+        </div>
+        
+        <div class="song-info">
+            <h1 class="song-title">Full House </h1>
+            <p class="song-artist">D</p>
+        </div>
+        
+        <div class="progress-container" id="progressContainer">
+            <div class="progress" id="progress"></div>
+        </div>
+        
+        <div class="time-display">
+            <span id="currentTime">0:00</span>
+            <span id="duration">0:00</span>
+        </div>
+        
+        <div class="controls">
+            <button class="control-btn" id="prevBtn">⏮</button>
+            <button class="control-btn play-btn" id="playBtn">▶</button>
+            <button class="control-btn" id="nextBtn">⏭</button>
+        </div>
+        
+        <div class="volume-container">
+            <span>🔊</span>
+            <input type="range" class="volume-slider" id="volumeSlider" min="0" max="1" step="0.01" value="0.7">
+        </div>
+        
+        <div class="status" id="status"></div>
+        
+        <audio id="audioPlayer" preload="metadata">
+            <source src="full house 1.mp3" type="audio/mpeg">
+            您的浏览器不支持音频播放
+        </audio>
+        
+        <footer>
+            <p>简洁音频播放器 © 2023</p>
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const audio = document.getElementById('audioPlayer');
+            const playBtn = document.getElementById('playBtn');
+            const progress = document.getElementById('progress');
+            const progressContainer = document.getElementById('progressContainer');
+            const currentTimeEl = document.getElementById('currentTime');
+            const durationEl = document.getElementById('duration');
+            const volumeSlider = document.getElementById('volumeSlider');
+            const statusEl = document.getElementById('status');
+            
+            // 播放/暂停功能
+            playBtn.addEventListener('click', function() {
+                if (audio.paused) {
+                    audio.play();
+                    playBtn.innerHTML = '❚❚';
+                    statusEl.textContent = '正在播放';
+                } else {
+                    audio.pause();
+                    playBtn.innerHTML = '▶';
+                    statusEl.textContent = '已暂停';
+                }
+            });
+            
+            // 更新进度条
+            audio.addEventListener('timeupdate', function() {
+                const currentTime = audio.currentTime;
+                const duration = audio.duration;
+                
+                if (duration) {
+                    const progressPercent = (currentTime / duration) * 100;
+                    progress.style.width = `${progressPercent}%`;
+                    
+                    // 更新时间显示
+                    const currentMinutes = Math.floor(currentTime / 60);
+                    const currentSeconds = Math.floor(currentTime % 60);
+                    const durationMinutes = Math.floor(duration / 60);
+                    const durationSeconds = Math.floor(duration % 60);
+                    
+                    currentTimeEl.textContent = 
+                        `${currentMinutes}:${currentSeconds < 10 ? '0' : ''}${currentSeconds}`;
+                    durationEl.textContent = 
+                        `${durationMinutes}:${durationSeconds < 10 ? '0' : ''}${durationSeconds}`;
+                }
+            });
+            
+            // 点击进度条跳转
+            progressContainer.addEventListener('click', function(e) {
+                const width = this.clientWidth;
+                const clickX = e.offsetX;
+                const duration = audio.duration;
+                
+                if (duration) {
+                    audio.currentTime = (clickX / width) * duration;
+                }
+            });
+            
+            // 音量控制
+            volumeSlider.addEventListener('input', function() {
+                audio.volume = this.value;
+            });
+            
+            // 音频状态监听
+            audio.addEventListener('loadstart', () => {
+                statusEl.textContent = '正在加载音频...';
+            });
+            
+            audio.addEventListener('canplay', () => {
+                statusEl.textContent = '音频已准备就绪，点击播放';
+            });
+            
+            audio.addEventListener('playing', () => {
+                statusEl.textContent = '正在播放';
+            });
+            
+            audio.addEventListener('ended', function() {
+                playBtn.innerHTML = '▶';
+                statusEl.textContent = '播放结束';
+                progress.style.width = '0%';
+                currentTimeEl.textContent = '0:00';
+            });
+            
+            audio.addEventListener('error', (e) => {
+                statusEl.textContent = '音频加载失败，请检查文件路径';
+                console.error('音频错误:', audio.error);
+            });
+            
+            // 上一曲/下一曲按钮（仅作样式展示）
+            document.getElementById('prevBtn').addEventListener('click', function() {
+                statusEl.textContent = '这是唯一的音频';
+            });
+            
+            document.getElementById('nextBtn').addEventListener('click', function() {
+                statusEl.textContent = '这是唯一的音频';
+            });
+        });
+    </script>
+</body>
+</html>
